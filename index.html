@@ -1,125 +1,144 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-		<title>Smoothed Radar Chart</title>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+        <title>Smoothed Radar Chart with Dropdown</title>
 
-		<!-- Google fonts -->
-		<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300' rel='stylesheet' type='text/css'>
-		<link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300' rel='stylesheet' type='text/css'>
+        <link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
 
-		<!-- D3.js -->
-		<script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
-		<script src="https://d3js.org/d3-path.v1.min.js" charset="utf-8"></script>
-		<script src="radarChart.js" charset="utf-8"></script>
-		<style>
-			body {
-				font-family: 'Open Sans', sans-serif;
-				font-size: 11px;
-				font-weight: 300;
-				fill: #242424;
-				text-align: center;
-				text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
-				cursor: default;
-			}
+        <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+        <script src="radarChart.js" charset="utf-8"></script>
+        <style>
+            body {
+                font-family: 'Open Sans', sans-serif;
+                font-size: 11px;
+                font-weight: 300;
+                fill: #242424;
+                text-align: center;
+                text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
+                cursor: default;
+            }
 
-			.legend {
-				font-family: 'Raleway', sans-serif;
-				fill: #333333;
-			}
-		</style>
-	</head>
-	<body>
-		<div class="radarChart" style="display: inline-flex;"></div>
-		<div class="radarChart2" style="display: inline-flex;"></div>
-		<script>
-			//////////////////////////////////////////////////////////////
-			//////////////////////// Set-Up //////////////////////////////
-			//////////////////////////////////////////////////////////////
+            .legend {
+                font-family: 'Raleway', sans-serif;
+                fill: #333333;
+            }
+            
+            #chart-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            #chart-selector {
+                 font-family: 'Raleway', sans-serif;
+                 font-size: 14px;
+                 padding: 5px 8px;
+                 margin: 20px;
+            }
 
-			var margin = { top: 50, right: 80, bottom: 50, left: 80 },
-				width = Math.min(700, window.innerWidth / 4) - margin.left - margin.right,
-				height = Math.min(width, window.innerHeight - margin.top - margin.bottom);
+        </style>
+    </head>
+    <body>
+        <div id="chart-container">
+            <select id="chart-selector"></select>
+            
+            <div class="radarChart"></div>
+        </div>
 
-			//////////////////////////////////////////////////////////////
-			////////////////////////// Data //////////////////////////////
-			//////////////////////////////////////////////////////////////
-            var one_data = [
-				{ name: 'Morning',
-					axes: [
-						{axis: 'Heart Rate (bpm)', value: 85},
-						{axis: 'Blood Pressure (systolic)', value: 117},
-						{axis: 'Blood Pressure (diastolic)', value: 85},
-						{axis: 'Respiratory Rate (breaths/min)', value: 16},
-						{axis: 'Temperature', value: 98.96},
-					]
-                }
-            ];
-			var data = [
-				{ name: 'Morning',
-					axes: [
-						{axis: 'Heart Rate (bpm)', value: 85},
-						{axis: 'Blood Pressure (systolic)', value: 117},
-						{axis: 'Blood Pressure (diastolic)', value: 85},
-						{axis: 'Respiratory Rate (breaths/min)', value: 16},
-						{axis: 'Temperature', value: 98.96},
-					]
-				},
-				{ name: 'Noon',
-					axes: [
-                        {axis: 'Heart Rate (bpm)', value: 68},
-						{axis: 'Blood Pressure (systolic)', value: 135},
-						{axis: 'Blood Pressure (diastolic)', value: 71},
-						{axis: 'Respiratory Rate (breaths/min)', value: 18},
-						{axis: 'Temperature', value: 98.06},
-					]
-				},
-                { name: 'Evening',
-					axes: [
-                        {axis: 'Heart Rate (bpm)', value: 65},
-						{axis: 'Blood Pressure (systolic)', value: 127},
-						{axis: 'Blood Pressure (diastolic)', value: 78},
-						{axis: 'Respiratory Rate (breaths/min)', value: 17},
-						{axis: 'Temperature', value: 98.96},
-					]
-				}
-			];
+        <script>
+            //////////////////////////////////////////////////////////////
+            //////////////////////// Set-Up //////////////////////////////
+            //////////////////////////////////////////////////////////////
 
-			//////////////////////////////////////////////////////////////
-			////// First example /////////////////////////////////////////
-            ///// (not so much options) //////////////////////////////////
-			//////////////////////////////////////////////////////////////
-			var radarChartOptions = {
-			  w: 290,
-			  h: 350,
-			  margin: margin,
-			  levels: 5,
-			  roundStrokes: true,
-				color: d3.scaleOrdinal().range(["#26AF32"]),
-				format: '.0f'
-			};
+            var margin = { top: 50, right: 80, bottom: 50, left: 80 },
+                width = Math.min(700, window.innerWidth / 4) - margin.left - margin.right,
+                height = Math.min(width, window.innerHeight - margin.top - margin.bottom);
 
-			// Draw the chart, get a reference the created svg element :
-			let svg_radar1 = RadarChart(".radarChart", one_data, radarChartOptions);
+            //////////////////////////////////////////////////////////////
+            ////////////////////////// Data //////////////////////////////
+            //////////////////////////////////////////////////////////////
+            
+            // Consolidate all datasets into a single object for easy access
+            const allData = {
+                "Morning": [
+                    { name: 'Morning',
+                        axes: [
+                            {axis: 'Heart Rate (bpm)', value: 85},
+                            {axis: 'Blood Pressure (systolic)', value: 117},
+                            {axis: 'Blood Pressure (diastolic)', value: 85},
+                            {axis: 'Respiratory Rate (breaths/min)', value: 16},
+                            {axis: 'Temperature (°F)', value: 98.96}
+                        ]
+                    }
+                ],
+                "Noon": [
+                    { name: 'Noon',
+                        axes: [
+                            {axis: 'Heart Rate (bpm)', value: 68},
+                            {axis: 'Blood Pressure (systolic)', value: 135},
+                            {axis: 'Blood Pressure (diastolic)', value: 71},
+                            {axis: 'Respiratory Rate (breaths/min)', value: 18},
+                            {axis: 'Temperature (°F)', value: 98.06}
+                        ]
+                    }
+                ],
+                "Evening": [
+                    { name: 'Evening',
+                        axes: [
+                            {axis: 'Heart Rate (bpm)', value: 62},
+                            {axis: 'Blood Pressure (systolic)', value: 120},
+                            {axis: 'Blood Pressure (diastolic)', value: 80},
+                            {axis: 'Respiratory Rate (breaths/min)', value: 15},
+                            {axis: 'Temperature (°F)', value: 97.5}
+                        ]
+                    }
+                ]
+            };
 
-			//////////////////////////////////////////////////////////////
-			///// Second example /////////////////////////////////////////
-			///// Chart legend, custom color, custom unit, etc. //////////
-			//////////////////////////////////////////////////////////////
-			var radarChartOptions2 = {
-			  w: 290,
-			  h: 350,
-			  margin: margin,
-			  maxValue: 60,
-			  levels: 6,
-			  roundStrokes: false,
-			  color: d3.scaleOrdinal().range(["#AFC52F", "#ff6600", "#715C2C"]),
-				format: '.0f',
-				legend: { title: 'Vitals', translateX: 100, translateY: 40 },
-			};
+            //////////////////////////////////////////////////////////////
+            //////////////////// Draw the Chart //////////////////////////
+            //////////////////////////////////////////////////////////////
+            var radarChartOptions = {
+              w: 290,
+              h: 350,
+              margin: margin,
+              levels: 5,
+			  maxValue: 135,
+              roundStrokes: false,
+              color: d3.scaleOrdinal().range(["#26AF32", "#CC333F", "#00A0B0"]), 
+              format: '.0f'
+            };
 
-			// Draw the chart, get a reference the created svg element :
-			let svg_radar2 = RadarChart(".radarChart2", data, radarChartOptions2);
-		</script>
-	</body>
+            // Populate the dropdown
+            const selector = d3.select("#chart-selector");
+            const timePeriods = Object.keys(allData);
+            
+            selector.selectAll("option")
+                .data(timePeriods)
+                .enter().append("option")
+                .attr("value", d => d)
+                .text(d => d);
+
+            function updateChart(timePeriod) {
+                const selectedData = allData[timePeriod];
+                const color = radarChartOptions.color(timePeriod); 
+                
+                const dynamicOptions = {...radarChartOptions, color: d3.scaleOrdinal().range([color])};
+
+                d3.select(".radarChart").select("svg").remove();
+                
+                RadarChart(".radarChart", selectedData, dynamicOptions);
+            }
+
+            updateChart(timePeriods[0]);
+
+            selector.on("change", function() {
+                const selectedTimePeriod = d3.select(this).property("value");
+                updateChart(selectedTimePeriod);
+            });
+
+        </script>
+    </body>
 </html>
