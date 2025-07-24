@@ -19,18 +19,21 @@
                 text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
                 cursor: default;
             }
-
+            #chart-container {
+                position: center;
+                top: 3rem;
+                left: 0.5rem;
+                z-index: 10;
+                font-size: 14px;
+                border: 1px solid #e0e0e0;
+                padding: 0.5rem;
+                border-radius: 1px;
+                background-color: #fafafa;
+            }
             .legend {
                 font-family: 'Raleway', sans-serif;
                 fill: #333333;
             }
-            
-            #chart-container {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-            
             #chart-selector {
                  font-family: 'Raleway', sans-serif;
                  font-size: 14px;
@@ -42,7 +45,11 @@
     </head>
     <body>
         <div id="chart-container">
-            <select id="chart-selector"></select>
+            <label>
+                <input type="checkbox" id="morning-data" checked> Morning
+                <input type="checkbox" id="noon-data" unchecked> Noon
+                <input type="checkbox" id="evening-data" unchecked> Evening
+            </label>
             
             <div class="radarChart"></div>
         </div>
@@ -52,7 +59,7 @@
             //////////////////////// Set-Up //////////////////////////////
             //////////////////////////////////////////////////////////////
 
-            var margin = { top: 50, right: 80, bottom: 50, left: 80 },
+            var margin = { top: 100, right: 130, bottom: 100, left: 130 },
                 width = Math.min(700, window.innerWidth / 4) - margin.left - margin.right,
                 height = Math.min(width, window.innerHeight - margin.top - margin.bottom);
 
@@ -100,9 +107,9 @@
             //////////////////////////////////////////////////////////////
             //////////////////// Draw the Chart //////////////////////////
             //////////////////////////////////////////////////////////////
-            var radarChartOptions = {
-              w: 290,
-              h: 350,
+            let radarChartOptions = {
+              w: 500,
+              h: 600,
               margin: margin,
               levels: 5,
 			  maxValue: 135,
@@ -110,34 +117,41 @@
               color: d3.scaleOrdinal().range(["#26AF32", "#CC333F", "#00A0B0"]), 
               format: '.0f'
             };
-
-            // Populate the dropdown
-            const selector = d3.select("#chart-selector");
-            const timePeriods = Object.keys(allData);
             
-            selector.selectAll("option")
-                .data(timePeriods)
-                .enter().append("option")
-                .attr("value", d => d)
-                .text(d => d);
+            d3.select("#morning-data").on("change",update);
+            d3.select("#noon-data").on("change",update);
+            d3.select("#evening-data").on("change",update);
 
-            function updateChart(timePeriod) {
-                const selectedData = allData[timePeriod];
-                const color = radarChartOptions.color(timePeriod); 
-                
-                const dynamicOptions = {...radarChartOptions, color: d3.scaleOrdinal().range([color])};
+            function update() {
+                const morningCheck = d3.select("#morning-data").property("checked");                
+                const noonCheck = d3.select("#noon-data").property("checked");
+                const eveningCheck = d3.select("#evening-data").property("checked");
+
+                const dataToDisplay = [];
+
+                if (morningCheck) {
+                    dataToDisplay.push(...allData["Morning"])
+                }
+                if (noonCheck) {
+                    dataToDisplay.push(...allData["Noon"])
+                }
+                if (eveningCheck) {
+                    dataToDisplay.push(...allData["Evening"])
+                }
+
 
                 d3.select(".radarChart").select("svg").remove();
-                
-                RadarChart(".radarChart", selectedData, dynamicOptions);
+
+                RadarChart(".radarChart", dataToDisplay, radarChartOptions);
             }
 
-            updateChart(timePeriods[0]);
+            update();
 
-            selector.on("change", function() {
-                const selectedTimePeriod = d3.select(this).property("value");
-                updateChart(selectedTimePeriod);
-            });
+                
+
+
+                
+            
 
         </script>
     </body>
